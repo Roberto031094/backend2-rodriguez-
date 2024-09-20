@@ -1,0 +1,26 @@
+[
+  {
+    "id": "09ad87e7-e184-4424-b0a7-906f8e4d02c3",
+    "title": "Producto Handlebars 1",
+    "price": "300",
+    "description": "Descripción Misteriosa",
+    "stock": "5",
+    "code": "123456",
+    "category": "Ventana1",
+    "thumbnails": [
+      "nohay.jpg"
+    ]
+  },
+  {
+    "id": "9915ecd4-43f6-4cec-8be4-e835c3a1cff8",
+    "title": "Producto Ventana 2",
+    "price": "100",
+    "description": "Descripción Misteriosa 2",
+    "stock": "3",
+    "code": "666",
+    "category": "Ventana2",
+    "thumbnails": [
+      "tampocohay.jpg"
+    ]
+  }
+]
