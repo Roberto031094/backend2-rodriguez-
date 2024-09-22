@@ -42,6 +42,7 @@
                 <p>Código: {{this.code}}</p>
                 <p>Categoría: {{this.category}}</p>
                 <p>Imagen: {{this.thumbnails}}</p>
+                <button class="delete-button" data-id="{{this.id}}">Borrar Producto</button> <!-- Botón para borrar el producto -->
             </li>
             {{/each}}
         </ul>
@@ -55,7 +56,7 @@
         socket.on('productAdded', (newProduct) => {
             const productListElement = document.getElementById('product-list').getElementsByTagName('ul')[0];
             const productItem = `
-                <li id="product-${newProduct.id}"> <!-- ID único del producto -->
+                <li id="product-${newProduct.id}">
                     <h2>${newProduct.title}</h2>
                     <p>Precio: ${newProduct.price}</p>
                     <p>Descripción: ${newProduct.description}</p>
@@ -63,8 +64,12 @@
                     <p>Código: ${newProduct.code}</p>
                     <p>Categoría: ${newProduct.category}</p>
                     <p>Imagen: ${newProduct.thumbnails}</p>
+                    <button class="delete-button" data-id="${newProduct.id}">Borrar Producto</button>
                 </li>`;
-            productListElement.innerHTML += productItem; 
+            productListElement.innerHTML += productItem;
+
+            // Agregar el evento de borrar producto al nuevo botón
+            addDeleteButtonListener();
         });
 
         socket.on('productDeleted', (deletedProductId) => {
@@ -93,7 +98,19 @@
 
             productForm.reset();
         });
+
+        function addDeleteButtonListener() {
+            const deleteButtons = document.querySelectorAll('.delete-button');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = event.target.getAttribute('data-id');
+                    socket.emit('deleteProduct', productId); // Enviar evento para eliminar el producto
+                });
+            });
+        }
+
+        // Inicializar la escucha de los botones de eliminar para los productos ya renderizados
+        addDeleteButtonListener();
     </script>
 </body>
 </html>
-

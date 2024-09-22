@@ -6,8 +6,9 @@ import { Server } from 'socket.io';
 
 const router = express.Router();
 const productsFilePath = path.join(process.cwd(), 'src', 'data', 'productos.json');
-let io; 
+let io;
 
+// Función para leer el archivo de productos
 const readProductsFile = () => {
   try {
     if (!fs.existsSync(productsFilePath)) return [];
@@ -19,6 +20,7 @@ const readProductsFile = () => {
   }
 };
 
+// Función para escribir el archivo de productos
 const writeProductsFile = (products) => {
   try {
     fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2));
@@ -28,26 +30,40 @@ const writeProductsFile = (products) => {
   }
 };
 
-// Config de io
+// Configuración de Socket.io
 export const configureIO = (socketServer) => {
   io = socketServer;
 
   io.on('connection', (socket) => {
     console.log('Nuevo cliente conectado');
 
+    // Manejar el evento para agregar un nuevo producto
     socket.on('addProduct', (newProduct) => {
-      // Usé esto para dar un ID único
-      newProduct.id = uuidv4();
-
+      newProduct.id = uuidv4(); // Generar un ID único
       const products = readProductsFile();
       products.push(newProduct);
       writeProductsFile(products);
 
-      io.emit('productAdded', newProduct);
+      io.emit('productAdded', newProduct); // Emitir el producto a todos los clientes
+    });
+
+    // Manejar el evento para eliminar un producto
+    socket.on('deleteProduct', (productId) => {
+      const products = readProductsFile();
+      const productIndex = products.findIndex((p) => p.id === productId);
+
+      if (productIndex !== -1) {
+        const deletedProduct = products.splice(productIndex, 1); // Eliminar el producto
+        writeProductsFile(products);
+
+        io.emit('productDeleted', productId); // Emitir el ID del producto eliminado a todos los clientes
+        console.log(`Producto con ID ${productId} eliminado y emitido a todos los clientes.`);
+      } else {
+        console.log(`Producto con ID ${productId} no encontrado.`);
+      }
     });
   });
 };
-
 
 // GET de todos los productos
 router.get('/', (req, res) => {
@@ -56,11 +72,11 @@ router.get('/', (req, res) => {
   res.json(limit ? products.slice(0, limit) : products);
 });
 
-// GET de producto según id
+// GET de producto por ID
 router.get('/:pid', (req, res) => {
   const { pid } = req.params;
   const products = readProductsFile();
-  const product = products.find(p => p.id === pid);
+  const product = products.find((p) => p.id === pid);
 
   if (product) {
     res.json(product);
@@ -69,7 +85,7 @@ router.get('/:pid', (req, res) => {
   }
 });
 
-// POST del producto
+// POST para agregar un producto
 router.post('/', (req, res) => {
   const { title, description, code, price, stock, category, thumbnails = [] } = req.body;
 
@@ -78,7 +94,6 @@ router.post('/', (req, res) => {
   }
 
   const products = readProductsFile();
-
   const newProduct = {
     id: uuidv4(),
     title,
@@ -88,28 +103,27 @@ router.post('/', (req, res) => {
     status: true,
     stock,
     category,
-    thumbnails
+    thumbnails,
   };
 
   products.push(newProduct);
-  console.log('Nuevo producto agregado:', newProduct); 
   writeProductsFile(products);
 
   res.status(201).json(newProduct);
 
   if (io) {
-    io.emit('productAdded', newProduct);
-    io.emit('productListUpdate', products);
+    io.emit('productAdded', newProduct); // Emitir el producto a todos los clientes conectados
+    io.emit('productListUpdate', products); // Emitir la lista actualizada
   }
 });
 
-// PUT del producto
+// PUT para actualizar un producto
 router.put('/:pid', (req, res) => {
   const { pid } = req.params;
   const { id, ...updates } = req.body;
 
   const products = readProductsFile();
-  const productIndex = products.findIndex(p => p.id === pid);
+  const productIndex = products.findIndex((p) => p.id === pid);
 
   if (productIndex !== -1) {
     products[productIndex] = { ...products[productIndex], ...updates };
@@ -120,19 +134,19 @@ router.put('/:pid', (req, res) => {
   }
 });
 
-// DELETE del producto
+// DELETE para eliminar un producto
 router.delete('/:pid', (req, res) => {
   const { pid } = req.params;
   const products = readProductsFile();
-  const productIndex = products.findIndex(p => p.id === pid);
+  const productIndex = products.findIndex((p) => p.id === pid);
 
   if (productIndex !== -1) {
     const deletedProduct = products.splice(productIndex, 1);
-    writeProductsFile(products); 
+    writeProductsFile(products);
     res.json(deletedProduct);
 
     if (io) {
-      io.emit('productDeleted', pid);
+      io.emit('productDeleted', pid); // Emitir el ID del producto eliminado a todos los clientes
     }
   } else {
     res.status(404).json({ message: 'Producto no encontrado' });
@@ -145,7 +159,7 @@ router.get('/home', (req, res) => {
   res.render('home', { products });
 });
 
-// Ruta para la vista realTimeProducts
+// Ruta para la vista de productos en tiempo real
 router.get('/realtimeproducts', (req, res) => {
   const products = readProductsFile();
   res.render('realTimeProducts', { products });

@@ -68,3 +68,28 @@ app.delete('/productos/:id', (req, res) => {
 
   res.sendStatus(200);
 });
+
+
+io.on('connection', (socket) => {
+    console.log('Un cliente se ha conectado.');
+
+    // Escucha el evento 'addProduct'
+    socket.on('addProduct', (newProduct) => {
+        // Lógica para agregar el producto a la base de datos o arreglo
+        io.emit('productAdded', newProduct); // Emite el evento para actualizar la lista
+    });
+
+    // Escucha el evento 'deleteProduct'
+    socket.on('deleteProduct', (productId) => {
+        // Lógica para eliminar el producto de la base de datos o del arreglo
+        // Aquí deberías eliminar el producto por su ID
+        console.log(`Producto con ID: ${productId} eliminado.`);
+
+        // Luego, emite el evento para notificar a todos los clientes
+        io.emit('productDeleted', productId);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Un cliente se ha desconectado.');
+    });
+});
