@@ -1,1 +1,1 @@
-Una aclaración más, profe: El delete en tiempo real fue probado solo con postman. El Post lo probé desde la view y desde postman. Saludos.
+Una aclaración más, profe: El delete en tiempo real fue probado con postman y desde el view. Con el Post lo mismo. Saludos.
